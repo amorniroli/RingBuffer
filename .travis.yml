@@ -1,0 +1,8 @@
+language: c
+sudo: false
+script:
+  - make clean && make
+  - ./main
+  - ./gcov.sh
+after_success:
+  - 'bash <(curl -s https://codecov.io/bash)'
