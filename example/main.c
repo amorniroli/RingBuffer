@@ -1,4 +1,5 @@
 #include <inttypes.h>
+// cppcheck-suppress misra-c2012-21.6; for testing purpose
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -15,9 +16,9 @@ typedef struct
 void
 RingBuffer_ProtectCallback (uint8_t op, void* ptrArg)
 {
-    (void) arg;
     uint32_t* ptrTemp;
 
+    // cppcheck-suppress misra-c2012-11.5; for testing purpose
     ptrTemp = ptrArg;
 
     switch (op)
@@ -58,9 +59,9 @@ main (void)
 
     length = RingBuffer_GetLength (testBuffer);
 
-    for (i = 0; i < (length - 1); i++)
+    for (i = 0UL; i < (length - 1UL); i++)
     {
-        memset (&item, 0x00, sizeof (item));
+        (void) memset (&item, 0x00, sizeof (item));
 
         item.x = i;
 
@@ -72,28 +73,32 @@ main (void)
 
         res = memcmp (&testBuffer.array[testBuffer.tail + i], &item, sizeof (item));
 
-        printf ("push %"PRIu32" count %"PRIu32"\n", item.x, used);
+        (void) printf ("push %"PRIu32" count %"PRIu32"\n", item.x, used);
 
-        assert ((res == 0) && (used == (i + 1)) && (available == ((length - 1) - used)));
+        assert ((res == 0) && (used == (i + 1UL)) && (available == ((length - 1UL) - used)));
     }
 
     usedHalf = (RingBuffer_GetUsed (testBuffer) / ((uint32_t) 2));
 
-    assert ((ptrTemp = calloc (usedHalf, sizeof (*ptrTemp))) != NULL);
+    // cppcheck-suppress misra-c2012-11.5; for testing purpose
+    // cppcheck-suppress misra-c2012-21.3; for testing purpose
+    ptrTemp = calloc (usedHalf, sizeof (*ptrTemp));
+
+    assert (ptrTemp != NULL);
 
     RingBuffer_Empty (ptrTemp, testBuffer, usedHalf);
 
-    printf ("count after empty %"PRIu32"\n", RingBuffer_GetUsed (testBuffer));
+    (void) printf ("count after empty %"PRIu32"\n", RingBuffer_GetUsed (testBuffer));
 
     used = RingBuffer_GetUsed (testBuffer);
 
     available = RingBuffer_GetFree (testBuffer);
 
-    assert ((used == ((length - 1) - usedHalf)) && (available == usedHalf));
+    assert ((used == ((length - 1UL) - usedHalf)) && (available == usedHalf));
 
     for (i = 0; i < usedHalf; i++)
     {
-        memset (&item, 0x00, sizeof (item));
+        (void) memset (&item, 0x00, sizeof (item));
 
         item.x = i;
 
@@ -104,27 +109,27 @@ main (void)
 
     RingBuffer_Fill (testBuffer, ptrTemp, usedHalf);
 
-    printf ("count after fill %"PRIu32"\n", RingBuffer_GetUsed (testBuffer));
+    (void) printf ("count after fill %"PRIu32"\n", RingBuffer_GetUsed (testBuffer));
 
     used = RingBuffer_GetUsed (testBuffer);
 
     available = RingBuffer_GetFree (testBuffer);
 
-    assert ((used == (length - 1)) && (available == 0));
+    assert ((used == (length - 1UL)) && (available == 0UL));
 
-    item.x = (usedHalf - 1);
+    item.x = (usedHalf - 1UL);
 
     while (RingBuffer_GetUsed (testBuffer) > 1UL)
     {
         Item_t popped;
 
-        item.x = ((item.x + 1) % (length - 1));
+        item.x = ((item.x + 1UL) % (length - 1UL));
 
         RingBuffer_Pop (testBuffer, popped);
 
         res = memcmp (&popped, &item, sizeof (popped));
 
-        printf ("pop %"PRIu32" count %"PRIu32"\n", item.x, RingBuffer_GetUsed (testBuffer));
+        (void) printf ("pop %"PRIu32" count %"PRIu32"\n", item.x, RingBuffer_GetUsed (testBuffer));
 
         assert (res == 0);
     }
@@ -135,8 +140,9 @@ main (void)
 
     available = RingBuffer_GetFree (testBuffer);
 
-    assert ((used == 0) && (available == (length - 1)));
+    assert ((used == 0UL) && (available == (length - 1UL)));
 
+    // cppcheck-suppress misra-c2012-21.3; for testing purpose
     free (ptrTemp);
 
     return 0;

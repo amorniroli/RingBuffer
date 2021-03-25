@@ -22,7 +22,7 @@
 #define RingBuffer_Assert(pX) assert ((pX))
 
 /**
- * Enable support for thread-safe operatins.
+ * Enable support for thread-safe operations.
  */
 #define RING_BUFFER_PROTECT 1
 

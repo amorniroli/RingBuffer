@@ -61,28 +61,31 @@
  * @param[in, out] pPtrArg      Protect callback pointer to argument (if \ref RING_BUFFER_PROTECT is enabled).
  */
 #if (RING_BUFFER_PROTECT == 1)
-    #define RingBuffer_Create(pStorageClass, pType, pName, pLength, pPtrCallback, pPtrArg, ...) \
-        pStorageClass struct RingBuffer_ ## pName ## _t                                         \
-        {                                                                                       \
-            pType    array[(pLength)];                                                          \
-            uint32_t head;                                                                      \
-            uint32_t tail;                                                                      \
-            struct                                                                              \
-            {                                                                                   \
-                void (*ptrCallback)(uint8_t op, void* ptrArg);                                  \
-                void* ptrArg;                                                                   \
-            } protect;                                                                          \
-        } pName =                                                                               \
-        {                                                                                       \
-            .head    = 0,                                                                       \
-            .tail    = 0,                                                                       \
-            .protect =                                                                          \
-            {                                                                                   \
-                .ptrCallback = (pPtrCallback),                                                  \
-                .ptrArg      = (pPtrArg)                                                        \
-            }                                                                                   \
+    // cppcheck-suppress misra-c2012-20.7; no way to enclose pStorageClass / pName X-macro
+    // cppcheck-suppress misra-c2012-20.10; X-macro
+    #define RingBuffer_Create(pStorageClass, pType, pName, pLength, pPtrCallback, pPtrArg) \
+        pStorageClass struct RingBuffer_ ## pName ## _t                                    \
+        {                                                                                  \
+            pType  array[(pLength)];                                                       \
+            uint32_t head;                                                                 \
+            uint32_t tail;                                                                 \
+            struct                                                                         \
+            {                                                                              \
+                void (*ptrCallback)(uint8_t, void*);                                       \
+                void* ptrArg;                                                              \
+            } protect;                                                                     \
+        } pName =                                                                          \
+        {                                                                                  \
+            .head    = 0,                                                                  \
+            .tail    = 0,                                                                  \
+            .protect =                                                                     \
+            {                                                                              \
+                .ptrCallback = (pPtrCallback),                                             \
+                .ptrArg      = (pPtrArg)                                                   \
+            }                                                                              \
         }
 #else
+    // cppcheck-suppress misra-c2012-20.10; X-macro
     #define RingBuffer_Create(pStorageClass, pType, pName, pLength, ...) \
         pStorageClass struct RingBuffer ## pName ## _t                   \
         {                                                                \
