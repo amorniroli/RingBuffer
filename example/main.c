@@ -1,3 +1,7 @@
+/**
+ * Copyright 2021 <Alessandro Morniroli>
+ */
+
 #include <inttypes.h>
 // cppcheck-suppress misra-c2012-21.6; for testing purpose
 #include <stdio.h>

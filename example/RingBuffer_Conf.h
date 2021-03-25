@@ -1,11 +1,13 @@
 /**
+ * Copyright 2021 <Alessandro Morniroli>
+ *
  * @file   RingBuffer_Conf.h
  * @author Alessandro Morniroli <alessandro.morniroli@gmail.com>
  * @date   Mon Mar 15 2021
  *
  * @brief  Ring buffer configuration example.
  */
- 
+
 #ifndef RING_BUFFER_CONF_H__
 #define RING_BUFFER_CONF_H__
 

@@ -1,5 +1,9 @@
 language: c
 sudo: false
+addons:
+  apt:
+    packages:
+      - cppcheck
 script:
   - make clean && make && make cppcheck
   - ./build/RingBuffer

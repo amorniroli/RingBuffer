@@ -3,7 +3,7 @@ EXCECUTABLE = $(BUILDDIR)/$(PROJECT)
 
 # Directories specification
 SRCDIRS := example
-INCDIRS := inc example
+INCDIRS := inc example template
 BUILDDIR := build
 
 # @note: to add another source extension, add to herer AND make sure to
@@ -28,7 +28,7 @@ DEPFLAGS := -MMD -MP
 
 # Tools and flags
 CPPLINT := cpplint
-override CPPLINTFLAGS += --linelength=100 --filter=-build/header_guard,-runtime/references,-runtime/indentation_namespace,-build/namespaces --extensions=$(subst $( ),$(,),$(SRCEXTS)) --headers=$(subst $( ),$(,),$(HDREXTS))
+override CPPLINTFLAGS += --linelength=120 --filter=-whitespace/braces,-whitespace/parens,-readability/casting,-build/header_guard,-runtime/references,-runtime/indentation_namespace,-build/namespaces --extensions=$(subst $( ),$(,),$(SRCEXTS)) --headers=$(subst $( ),$(,),$(HDREXTS))
 CPPCHECK := cppcheck
 override CPPCHECKFLAGS += --enable=style,warning --suppress=missingIncludeSystem
 override MISRAFLAGS    += --suppress=missingIncludeSystem --addon=misra.py --inline-suppr

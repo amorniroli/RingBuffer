@@ -1,4 +1,6 @@
 /**
+ * Copyright 2021 <Alessandro Mornirolir>
+ *
  * @file   RingBuffer.h
  * @author Alessandro Morniroli <alessandro.morniroli@gmail.com>
  * @date   Mon Mar 15 2021
