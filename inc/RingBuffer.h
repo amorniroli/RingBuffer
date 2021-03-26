@@ -63,12 +63,12 @@
  * @param[in, out] pPtrArg      Protect callback pointer to argument (if \ref RING_BUFFER_PROTECT is enabled).
  */
 #if (RING_BUFFER_PROTECT == 1)
-    // cppcheck-suppress misra-c2012-20.7; no way to enclose pStorageClass / pName X-macro
+    // cppcheck-suppress misra-c2012-20.7; no way to enclose pStorageClass / pName due to X-macro
     // cppcheck-suppress misra-c2012-20.10; X-macro
     #define RingBuffer_Create(pStorageClass, pType, pName, pLength, pPtrCallback, pPtrArg) \
         pStorageClass struct RingBuffer_ ## pName ## _t                                    \
         {                                                                                  \
-            pType  array[(pLength)];                                                       \
+            pType    array[(pLength)];                                                     \
             uint32_t head;                                                                 \
             uint32_t tail;                                                                 \
             struct                                                                         \
@@ -87,6 +87,7 @@
             }                                                                              \
         }
 #else
+    // cppcheck-suppress misra-c2012-20.7; no way to enclose pStorageClass / pName due to X-macro
     // cppcheck-suppress misra-c2012-20.10; X-macro
     #define RingBuffer_Create(pStorageClass, pType, pName, pLength, ...) \
         pStorageClass struct RingBuffer ## pName ## _t                   \
@@ -100,6 +101,33 @@
             .tail = 0                                                    \
         }
 #endif /* RING_BUFFER_PROTECT == 1 */
+
+/**
+ * Thread-safe protect callback (if \ref RING_BUFFER_PROTECT is enabled).
+ *
+ * @param          pOp          0-Unlock, 1-Lock operations.
+ * @param[in]      pPtrCallback Protect callback.
+ * @param[in, out] pPtrArg      Callback argument.
+ */
+#if (RING_BUFFER_PROTECT == 1)
+    #define RingBuffer_Protect(pOp, pPtrCallback, pPtrArg) \
+        ((pPtrCallback) ((pOp), (pPtrArg)))
+#else
+    #define RingBuffer_Protect(...)
+#endif /* RING_BUFFER_PROTECT == 1 */
+
+/**
+ * Resets ring buffer indexes.
+ *
+ * @param pName Ring buffer variable name.
+ */
+#define RingBuffer_Reset(pName)                                                                   \
+{                                                                                                 \
+    RingBuffer_Protect (RING_BUFFER_LOCK, (pName).protect.ptrCallback, (pName).protect.ptrArg);   \
+    (pName).head = 0;                                                                             \
+    (pName).tail = 0;                                                                             \
+    RingBuffer_Protect (RING_BUFFER_UNLOCK, (pName).protect.ptrCallback, (pName).protect.ptrArg); \
+}
 
 /**
  * Gets the ring buffer type size.
@@ -137,8 +165,8 @@
  * @param pName Ring buffer variable name.
  * @param pSize Size to increment.
  */
-#define RingBuffer_IncrementTail(pName, pSize)                                         \
-    RingBuffer_IncrementLinear ((pName).tail, (pSize), RingBuffer_GetLength ((pName)))
+#define RingBuffer_IncrementTail(pName, pSize)                                       \
+    RingBuffer_IncrementLinear((pName).tail, (pSize), RingBuffer_GetLength((pName)))
 
 /**
  * @brief Increments the ring buffer head index.
@@ -146,15 +174,26 @@
  * @param pName Ring buffer variable name.
  * @param pSize Size to increment.
  */
-#define RingBuffer_IncrementHead(pName, pSize)                                          \
-    RingBuffer_IncrementLinear ((pName).head, (pSize), RingBuffer_GetLength ((pName))); \
-    if ((pName).head == (pName).tail)                                                   \
-    {                                                                                   \
-        RingBuffer_IncrementTail ((pName), 1U);                                         \
-    }                                                                                   \
-    else                                                                                \
-    {                                                                                   \
+#define RingBuffer_IncrementHead(pName, pSize)                                        \
+    RingBuffer_IncrementLinear((pName).head, (pSize), RingBuffer_GetLength((pName))); \
+    if ((pName).head == (pName).tail)                                                 \
+    {                                                                                 \
+        RingBuffer_IncrementTail((pName), 1U);                                        \
+    }                                                                                 \
+    else                                                                              \
+    {                                                                                 \
     }
+
+/**
+ * Gets the number of the used slots in the ring buffer.
+ *
+ * @param pName Ring buffer variable name.
+ *
+ * @return The number of slots currently used.
+ */
+#define RingBuffer_GetUsed(pName)                                                                                    \
+    ((uint32_t) (((pName).head >= (pName).tail) ? ((pName).head - (pName).tail)                                    : \
+                                                  (RingBuffer_GetLength ((pName)) - (pName).tail + (pName).head)))
 
 /**
  * Gets the free slots in the buffer.
@@ -171,22 +210,20 @@
  *
  * @param pName Ring buffer variable name.
  *
- * @return 0 If the ring buffer is not empty.
- * @retval 1 If the ring buffer is empty.
+ * @return The ring buffer empty status (0-not empty, 1-empty).
  */
-#define RingBuffer_IsEmpty(pName)     \
-    (RingBuffer_GetUsed ((pName)) == 0)
+#define RingBuffer_IsEmpty(pName)         \
+    (RingBuffer_GetUsed ((pName)) == 0UL)
 
 /**
  * Checks if the ring buffer is full.
  *
  * @param pName Ring buffer variable name.
  *
- * @retval 0 If the ring buffer is not full.
- * @retval 1 If the ring buffer is full.
+ * @return The ring buffer full status (0-not full, 1-full).
  */
-#define RingBuffer_IsFull(pName)      \
-    (RingBuffer_GetFree ((pName)) == 0)
+#define RingBuffer_IsFull(pName)          \
+    (RingBuffer_GetFree ((pName)) == 0UL)
 
 /**
  * Copies data from circular buffer to linear buffer w/o updating r/w indexes.
@@ -200,9 +237,9 @@
     uint32_t used;                                                                                             \
     uint32_t temp;                                                                                             \
     uint32_t size;                                                                                             \
-    RingBuffer_Assert ((pSize) < RingBuffer_GetLength ((pSource)));                                            \
     RingBuffer_Protect (RING_BUFFER_LOCK, (pSource).protect.ptrCallback, (pSource).protect.ptrArg);            \
     used = RingBuffer_GetUsed ((pSource));                                                                     \
+    RingBuffer_Assert ((pSize) <= used);                                                                       \
     if ((pSize) > used)                                                                                        \
     {                                                                                                          \
         size = used;                                                                                           \
@@ -221,50 +258,11 @@
     }                                                                                                          \
     (void) memcpy ((pPtrDest), &(pSource).array[(pSource).tail], (temp * RingBuffer_GetTypeSize ((pSource)))); \
     (void) memcpy (&((uint8_t*) (pPtrDest))[(temp * RingBuffer_GetTypeSize ((pSource)))],                      \
-            (pSource).array,                                                                                   \
-            (size - temp) * RingBuffer_GetTypeSize ((pSource)));                                               \
+                   (pSource).array,                                                                            \
+                   (size - temp) * RingBuffer_GetTypeSize ((pSource)));                                        \
     RingBuffer_IncrementTail ((pSource), (pSize));                                                             \
     RingBuffer_Protect (RING_BUFFER_UNLOCK, (pSource).protect.ptrCallback, (pSource).protect.ptrArg);          \
 }
-
-
-/**
- * Thread-safe protect callback (if \ref RING_BUFFER_PROTECT is enabled).
- *
- * @param          pOp          0-Unlock, 1-Lock operations.
- * @param[in]      pPtrCallback Protect callback.
- * @param[in, out] pPtrArg      Callback argument.
- */
-#if (RING_BUFFER_PROTECT == 1)
-    #define RingBuffer_Protect(pOp, pPtrCallback, pPtrArg) \
-        ((pPtrCallback) ((pOp), (pPtrArg)))
-#else
-    #define RingBuffer_Protect(...)
-#endif /* RING_BUFFER_PROTECT == 1 */
-
-/**
- * Resets ring buffer indexes.
- *
- * @param pName Ring buffer variable name.
- */
-#define RingBuffer_Reset(pName)                                                                   \
-{                                                                                                 \
-    RingBuffer_Protect (RING_BUFFER_LOCK, (pName).protect.ptrCallback, (pName).protect.ptrArg);   \
-    (pName).head = 0;                                                                             \
-    (pName).tail = 0;                                                                             \
-    RingBuffer_Protect (RING_BUFFER_UNLOCK, (pName).protect.ptrCallback, (pName).protect.ptrArg); \
-}
-
-/**
- * Gets the number of the used slots in the ring buffer.
- *
- * @param pName Ring buffer variable name.
- *
- * @return The number of slots currently used.
- */
-#define RingBuffer_GetUsed(pName)                                                                                  \
-    ((uint32_t) (((pName).head >= (pName).tail) ? ((pName).head - (pName).tail)                                  : \
-                                              (RingBuffer_GetLength ((pName)) - (pName).tail + (pName).head)))
 
 /**
  * Pushes single item into ring buffer.
@@ -291,6 +289,7 @@
 #define RingBuffer_Pop(pName, pItem)                                                              \
 {                                                                                                 \
     RingBuffer_Protect (RING_BUFFER_LOCK, (pName).protect.ptrCallback, (pName).protect.ptrArg);   \
+    RingBuffer_Assert (RingBuffer_IsEmpty ((pName)) == 0UL);                                      \
     (pItem) = (pName).array[(pName).tail];                                                        \
     RingBuffer_IncrementTail ((pName), 1UL);                                                      \
     RingBuffer_Protect (RING_BUFFER_UNLOCK, (pName).protect.ptrCallback, (pName).protect.ptrArg); \
@@ -306,7 +305,7 @@
 #define RingBuffer_Fill(pDest, pPtrSource, pSize)                                                  \
 {                                                                                                  \
     uint32_t size;                                                                                 \
-    RingBuffer_Assert ((pSize) < RingBuffer_GetLength ((pDest)));                                  \
+    RingBuffer_Assert ((pSize) < (RingBuffer_GetLength ((pDest)) - 1UL));                          \
     RingBuffer_Protect (RING_BUFFER_LOCK, (pDest).protect.ptrCallback, (pDest).protect.ptrArg);    \
     if ((pSize) >= (RingBuffer_GetLength ((pDest)) - (pDest).head))                                \
     {                                                                                              \
@@ -317,11 +316,11 @@
         size = (pSize);                                                                            \
     }                                                                                              \
     (void) memcpy (&((uint8_t*) (pDest).array)[((pDest).head * RingBuffer_GetTypeSize ((pDest)))], \
-            (pPtrSource),                                                                          \
-            (size * RingBuffer_GetTypeSize ((pDest))));                                            \
+                   (pPtrSource),                                                                   \
+                   (size * RingBuffer_GetTypeSize ((pDest))));                                     \
     (void) memcpy ((pDest).array,                                                                  \
-            &((uint8_t*) (pPtrSource))[(size * RingBuffer_GetTypeSize ((pDest)))],                 \
-            (((pSize) - size) * RingBuffer_GetTypeSize ((pDest))));                                \
+                   &((uint8_t*) (pPtrSource))[(size * RingBuffer_GetTypeSize ((pDest)))],          \
+                   (((pSize) - size) * RingBuffer_GetTypeSize ((pDest))));                         \
     RingBuffer_IncrementHead ((pDest), (pSize));                                                   \
     RingBuffer_Protect (RING_BUFFER_UNLOCK, (pDest).protect.ptrCallback, (pDest).protect.ptrArg);  \
 }
