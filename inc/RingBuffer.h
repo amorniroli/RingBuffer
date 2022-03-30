@@ -40,7 +40,7 @@
 /**
  * Ring buffer module patch version.
  */
-#define RING_BUFFER_VERSION_PATCH 0
+#define RING_BUFFER_VERSION_PATCH 1
 
 /**
  * Ring buffer unlock operation.
@@ -64,9 +64,8 @@
  */
 #if (RING_BUFFER_PROTECT == 1)
     // cppcheck-suppress misra-c2012-20.7; no way to enclose pStorageClass / pName due to X-macro
-    // cppcheck-suppress misra-c2012-20.10; X-macro
     #define RingBuffer_Create(pStorageClass, pType, pName, pLength, pPtrCallback, pPtrArg) \
-        pStorageClass struct RingBuffer_ ## pName ## _t                                    \
+        pStorageClass struct                                                               \
         {                                                                                  \
             pType    array[(pLength)];                                                     \
             uint32_t head;                                                                 \
@@ -88,9 +87,8 @@
         }
 #else
     // cppcheck-suppress misra-c2012-20.7; no way to enclose pStorageClass / pName due to X-macro
-    // cppcheck-suppress misra-c2012-20.10; X-macro
     #define RingBuffer_Create(pStorageClass, pType, pName, pLength, ...) \
-        pStorageClass struct RingBuffer ## pName ## _t                   \
+        pStorageClass struct                                             \
         {                                                                \
             pType    array[(pLength)];                                   \
             uint32_t head;                                               \
@@ -258,7 +256,7 @@
     }                                                                                                          \
     (void) memcpy ((pPtrDest), &(pSource).array[(pSource).tail], (temp * RingBuffer_GetTypeSize ((pSource)))); \
     (void) memcpy (&((uint8_t*) (pPtrDest))[(temp * RingBuffer_GetTypeSize ((pSource)))],                      \
-                   (pSource).array,                                                                            \
+                   ((uint8_t*) (pSource).array),                                                                            \
                    (size - temp) * RingBuffer_GetTypeSize ((pSource)));                                        \
     RingBuffer_IncrementTail ((pSource), (pSize));                                                             \
     RingBuffer_Protect (RING_BUFFER_UNLOCK, (pSource).protect.ptrCallback, (pSource).protect.ptrArg);          \
@@ -315,10 +313,10 @@
     {                                                                                              \
         size = (pSize);                                                                            \
     }                                                                                              \
-    (void) memcpy (&((uint8_t*) (pDest).array)[((pDest).head * RingBuffer_GetTypeSize ((pDest)))], \
+    (void) memcpy (&(pDest).array[((pDest).head * RingBuffer_GetTypeSize ((pDest)))], \
                    (pPtrSource),                                                                   \
                    (size * RingBuffer_GetTypeSize ((pDest))));                                     \
-    (void) memcpy ((pDest).array,                                                                  \
+    (void) memcpy (((uint8_t*) (pDest).array),                                                     \
                    &((uint8_t*) (pPtrSource))[(size * RingBuffer_GetTypeSize ((pDest)))],          \
                    (((pSize) - size) * RingBuffer_GetTypeSize ((pDest))));                         \
     RingBuffer_IncrementHead ((pDest), (pSize));                                                   \

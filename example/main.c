@@ -9,47 +9,20 @@
 
 #include "RingBuffer.h"
 
-static uint32_t arg;
-
 typedef struct
 {
     uint8_t  dummy;
     uint32_t x;
 } Item_t;
 
-void
-RingBuffer_ProtectCallback (uint8_t op, void* ptrArg)
-{
-    uint32_t* ptrTemp;
-
-    // cppcheck-suppress misra-c2012-11.5; for testing purpose
-    ptrTemp = ptrArg;
-
-    switch (op)
-    {
-        case RING_BUFFER_UNLOCK:
-        {
-            *ptrTemp = 0;
-        }
-        break;
-
-        case RING_BUFFER_LOCK:
-        {
-            *ptrTemp = 1;
-        }
-        break;
-
-        default:
-        {
-            assert (0);
-        }
-        break;
-    }
-}
+static void
+RingBuffer_ProtectCallback (uint8_t op, void* ptrArg);
 
 int
 main (void)
 {
+    uint32_t arg;
+
     RingBuffer_Create(, Item_t, testBuffer, 8, RingBuffer_ProtectCallback, &arg);
 
     uint32_t i;
@@ -63,7 +36,7 @@ main (void)
 
     length = RingBuffer_GetLength (testBuffer);
 
-    for (i = 0UL; i < (length - 1UL); i++)
+    for (i = 0U; i < (length - 1U); i++)
     {
         (void) memset (&item, 0x00, sizeof (item));
 
@@ -75,7 +48,7 @@ main (void)
 
         available = RingBuffer_GetFree (testBuffer);
 
-        res = memcmp (&testBuffer.array[testBuffer.tail + i], &item, sizeof (item));
+        res = memcmp (((uint8_t*) &testBuffer.array[i]), ((uint8_t*) &item), sizeof (item));
 
         (void) printf ("push %"PRIu32" count %"PRIu32"\n", item.x, used);
 
@@ -102,11 +75,11 @@ main (void)
 
     for (i = 0; i < usedHalf; i++)
     {
-        (void) memset (&item, 0x00, sizeof (item));
+        (void) memset (((uint8_t*) &item), 0x00, sizeof (item));
 
         item.x = i;
 
-        res = memcmp (&ptrTemp[i], &item, sizeof (item));
+        res = memcmp (((uint8_t*) &ptrTemp[i]), ((uint8_t*) &item), sizeof (item));
 
         assert (res == 0);
     }
@@ -131,7 +104,7 @@ main (void)
 
         RingBuffer_Pop (testBuffer, popped);
 
-        res = memcmp (&popped, &item, sizeof (popped));
+        res = memcmp (((uint8_t*) &popped), ((uint8_t*) &item), sizeof (popped));
 
         (void) printf ("pop %"PRIu32" count %"PRIu32"\n", item.x, RingBuffer_GetUsed (testBuffer));
 
@@ -150,4 +123,22 @@ main (void)
     free (ptrTemp);
 
     return 0;
+}
+
+static void
+RingBuffer_ProtectCallback (uint8_t op, void* ptrArg)
+{
+    uint32_t* ptrTemp;
+
+    // cppcheck-suppress misra-c2012-11.5; for testing purpose
+    ptrTemp = ptrArg;
+
+    if (op == ((uint8_t) RING_BUFFER_UNLOCK))
+    {
+        *ptrTemp = 0;
+    }
+    else
+    {
+        *ptrTemp = 1;
+    }
 }

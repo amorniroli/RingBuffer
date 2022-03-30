@@ -20,9 +20,9 @@ OBJECTS := $(foreach ext, $(SRCEXTS), $(patsubst %.$(ext), $(BUILDDIR)/%.o, $(fi
 # Compilers and flags
 CC := gcc
 CXX := g++
-override CFLAGS += -g -Wall -Wno-unused-variable
+override CFLAGS += -g -Wall -Wno-unused-variable -fprofile-arcs -ftest-coverage -fno-exceptions -fno-inline
 override CXXFLAGS += -g -Wall -Wno-unused-variable
-override LDFLAGS += 
+override LDFLAGS += -fprofile-arcs -ftest-coverage -fno-exceptions -fno-inline
 INCFLAGS := $(INCDIRS:%=-I%)
 DEPFLAGS := -MMD -MP
 
@@ -31,7 +31,7 @@ CPPLINT := cpplint
 override CPPLINTFLAGS += --linelength=120 --filter=-whitespace/braces,-whitespace/parens,-readability/casting,-build/header_guard,-runtime/references,-runtime/indentation_namespace,-build/namespaces --extensions=$(subst $( ),$(,),$(SRCEXTS)) --headers=$(subst $( ),$(,),$(HDREXTS))
 CPPCHECK := cppcheck
 override CPPCHECKFLAGS += --enable=style,warning --suppress=missingIncludeSystem
-override MISRAFLAGS    += --suppress=missingIncludeSystem --addon=misra.py --inline-suppr
+override MISRAFLAGS    += --suppress=missingIncludeSystem --addon=misra.json --inline-suppr
 
 # This makefile name
 MAKEFILE := $(lastword $(MAKEFILE_LIST))
@@ -87,7 +87,7 @@ help:
 	@echo " make run          - Build and launch excecutable immediately"
 	@echo " make force        - Force rebuild of entire project (clean first)"
 	@echo " make clean        - Remove all build output"
-	@echo " make info         - Print out project configurations"	
+	@echo " make info         - Print out project configurations"
 	@echo " make cpplint      - C++ style checker tool following Google's C++ style guide"
 	@echo " make cppcheck     - Static code analysis tool for the C and C++"
 	@echo " make list-headers - Print out all recognized headers files"
@@ -170,7 +170,7 @@ debug:
 	@echo HeaderExts: $(HDREXTS)
 
 
-# 
+#
 # ### Utils ###
 #
 define print
