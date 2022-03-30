@@ -1,5 +1,5 @@
 # RingBuffer
-[![Build Status](https://travis-ci.org/amorniroli/RingBUffer.svg?branch=main)](https://travis-ci.org/amorniroli/RingBuffer) [![codecov](https://codecov.io/gh/amorniroli/RingBuffer/branch/main/graph/badge.svg)](https://codecov.io/gh/amorniroli/RingBuffer)
+[![Build Status](https://api.travis-ci.com/amorniroli/RingBuffer.svg?branch=main)](https://app.travis-ci.com/github/amorniroli/RingBuffer) [![codecov](https://codecov.io/gh/amorniroli/RingBuffer/branch/main/graph/badge.svg)](https://codecov.io/gh/amorniroli/RingBuffer)
 
 Header-only ring buffer C util.
 
@@ -78,7 +78,7 @@ for (i = 0; i < 4; i++)
 
 RingBuffer_Fill (testBuffer, item, 4);
 ```
-#### Empty multiple items from ring buffer 
+#### Empty multiple items from ring buffer
 ```c
 Item_t item[2];
 

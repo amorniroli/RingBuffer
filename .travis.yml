@@ -1,12 +1,15 @@
 language: c
-sudo: false
+os: linux
+dist:
+ - focal
 addons:
   apt:
     packages:
       - cppcheck
+      - gcovr
 script:
   - make clean && make && make cppcheck
   - ./build/RingBuffer
-  - ./gcov.sh
+  - gcovr --exclude-unreachable-branches
 after_success:
   - 'bash <(curl -s https://codecov.io/bash)'
